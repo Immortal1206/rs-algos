@@ -84,27 +84,29 @@ pub fn interpolation_search(nums: &[i32], target: i32) -> bool {
 }
 
 /**
-  假设要在 \[2,3,4,6,7,8,10,13,15,19,20,22,23,24,28\] 这个 15 个元素已排序集合中查找 22，<br>
-  那么首先查看 2 ^ 0 = 1 位置上的数字是否超过 22，得到 3 < 22，所以继续查找 2 ^ 1, 2 ^ 2, 2 ^ 3 位置处元素，<br>
-  发现对应的值 4, 7, 15 均小于 22。继续查看 16 = 2 ^ 4 处的值，可是 16 大于集合元素个数，超出范围了，<br>
-  所以查找上界就是最后一个索引 14 <br>
-  能找到一个上界，那么说明前一次访问处一定小于待查找的值，作为下界是合理的
- */
+ 假设要在 \[2,3,4,6,7,8,10,13,15,19,20,22,23,24,28\] 这个 15 个元素已排序集合中查找 22，<br>
+ 那么首先查看 2 ^ 0 = 1 位置上的数字是否超过 22，得到 3 < 22，所以继续查找 2 ^ 1, 2 ^ 2, 2 ^ 3 位置处元素，<br>
+ 发现对应的值 4, 7, 15 均小于 22。继续查看 16 = 2 ^ 4 处的值，可是 16 大于集合元素个数，超出范围了，<br>
+ 所以查找上界就是最后一个索引 14 <br>
+ 能找到一个上界，那么说明前一次访问处一定小于待查找的值，作为下界是合理的
+*/
 pub fn exponential_search(nums: &[i32], target: i32) -> bool {
   let size = nums.len();
-  if size == 0 { return false; }
+  if size == 0 {
+    return false;
+  }
 
   // 逐步找到上界
   let mut high = 1usize;
   while high < size && nums[high] < target {
-      high <<= 1;
+    high <<= 1;
   }
 
   //  上界的一半一定可以作为下界
   let low = high >> 1;
 
   // 区间内二分搜索加速查找
-  binary_search_iteration(&nums[low..size.min(high+1)], target)
+  binary_search_iteration(&nums[low..size.min(high + 1)], target)
 }
 
 #[cfg(test)]
