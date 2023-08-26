@@ -451,6 +451,50 @@ pub fn bucket_sort(arr: &mut [i32]) {
   }
 }
 
+/**
+#### 计数排序
+1. 初始化长度为maxV - minV + 1的计数器集合，值全为0，其中maxV为待排序集合的最大值，minV为最小值。
+2. 扫描待排序集合，以当前值减 minV 作下标，并对计数器中此下标的计数加1。
+3. 扫描一遍计数器集合，按顺序把值写回原集合，完成排序。
+
+时间复杂度是 O(n + k)，其中 n 是待排序元素的数量，k 是元素的范围（最大值和最小值之差加一）。<br>
+计数排序的优势在于其时间复杂度不依赖于输入数据的分布情况，但它要求待排序的元素必须是整数且范围尽可能小。
+ */
+pub fn counting_sort(nums: &mut [usize]) {
+  if nums.len() < 2 {
+    return;
+  }
+
+  let mut min = 0;
+  let mut max = 0;
+  for &num in nums.iter() {
+    if num > max {
+      max = num;
+    }
+    if num < min {
+      min = num;
+    }
+  }
+  let max_bkt_num = max - min + 1;
+  let mut counter = vec![0; max_bkt_num];
+
+  // 将数据标记到桶
+  for &v in nums.iter() {
+    counter[v - min] += 1;
+  }
+
+  // 数据写回原 nums 切片
+  // j 表示 nums 的下标
+  let mut j = 0;
+  for i in 0..max_bkt_num {
+    while counter[i] > 0 {
+      nums[j] = i;
+      counter[i] -= 1;
+      j += 1;
+    }
+  }
+}
+
 #[cfg(test)]
 mod tests {
   use super::*;
@@ -545,6 +589,18 @@ mod tests {
     assert_eq!(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10], nums);
     let mut nums = vec![93, 84, 72, 82, 31, 66, 56, 19, 44, 24];
     bucket_sort(&mut nums);
+    assert_eq!(vec![19, 24, 31, 44, 56, 66, 72, 82, 84, 93], nums);
+  }
+  #[test]
+  fn test_counting_sort() {
+    let mut nums = vec![5, 2, 9, 1, 5, 6];
+    counting_sort(&mut nums);
+    assert_eq!(vec![1, 2, 5, 5, 6, 9], nums);
+    let mut nums = vec![1, 3, 2, 8, 6, 4, 9, 7, 5, 10];
+    counting_sort(&mut nums);
+    assert_eq!(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10], nums);
+    let mut nums = vec![93, 84, 72, 82, 31, 66, 56, 19, 44, 24];
+    counting_sort(&mut nums);
     assert_eq!(vec![19, 24, 31, 44, 56, 66, 72, 82, 84, 93], nums);
   }
   #[test]
