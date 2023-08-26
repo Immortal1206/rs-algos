@@ -132,7 +132,6 @@ fn merge(nums: &mut [i32], mid: usize) {
   借助数组表示，按照完全二叉树的节点关系，堆满足如下的定义：<br>
   1. （最大堆）大顶堆：arr\[i\] >= arr\[2i + 1\] 且 arr\[i\] >= arr\[2i + 2\]
   2. （最小堆）小顶堆：arr\[i\] <= arr\[2i + 1\] 且 arr\[i\] <= arr\[2i + 2\]
-  3. 最大的节点在数组末尾，最小的节点在数组头部
 */
 pub struct MaxHeap<T: Ord> {
   pub elems: Vec<T>, // 保存完全二叉树
@@ -392,6 +391,66 @@ pub fn min_heap_sort(nums: &mut Vec<usize>) {
   }
 }
 
+/**
+#### 桶排序基本思路
+  1. 将待排序元素划分到不同的桶，先遍历求出 maxV 和 minV，设桶个数为k，<br>
+    则把区间\[minV, maxV\]均匀划分成k个区间，每个区间就是一个桶，将序列中的元素分配到各自的桶。
+  2. 对每个桶内的元素进行排序，排序算法可用任意排序算法。
+  3. 将各个桶中的有序元素合并成一个大的有序集合。
+
+假设数据是均匀分布的，则每个桶的元素平均个数为 n / k。<br>
+假设选择用快速排序对每个桶内的元素进行排序，那么每次排序的时间复杂度为 O((n / k)log(n / k))。<br>
+总的时间复杂度为O(n)+O(k)O(n/klog(n/k)) = O(n+nlog(n/k)) = O(n+nlogn-nlogk)。<br>
+当 k 接近于 n 时，桶排序的时间复杂度就可以认为是 O(n)。<br>
+即桶越多，时间效率就越高，而桶越多，空间就越大，越费内存，可见这是用空间换时间<br>
+
+桶排序的一个缺点是桶的数量太多。比如待排序数组 \[1,100,20,9,4,8,50\]，<br>
+可能桶排序算法会创建 100 个桶，然而大部分桶用不上，造成了空间浪费。
+ */
+pub fn bucket_sort(arr: &mut [i32]) {
+  let len = arr.len();
+  if len <= 1 {
+    return;
+  }
+
+  // 寻找区间长度
+  let mut min = 0;
+  let mut max = 0;
+  for &num in arr.iter() {
+    if num > max {
+      max = num;
+    }
+    if num < min {
+      min = num;
+    }
+  }
+
+  // 创建桶   如何创建合理数量的桶？
+  let num_buckets = (max - min) / (len as i32) + 1;
+  let mut buckets: Vec<Vec<i32>> = vec![Vec::new(); num_buckets as usize];
+
+  // 将元素放入对应的桶中
+  for &num in arr.iter() {
+    let bucket_index = ((num - min) / (len as i32)) as usize;
+    buckets[bucket_index].push(num);
+  }
+  // println!("{:?}", buckets.clone());
+
+  // 对每个桶内的元素进行排序
+  for bucket in buckets.iter_mut() {
+    quick_sort(bucket);
+  }
+
+  // 合并各个桶的元素得到排序结果
+  let mut index = 0;
+  for bucket in buckets.iter() {
+    for &num in bucket.iter() {
+      arr[index] = num;
+      index += 1;
+    }
+  }
+}
+
 #[cfg(test)]
 mod tests {
   use super::*;
@@ -474,6 +533,18 @@ mod tests {
     assert_eq!(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10], nums);
     let mut nums = vec![93, 84, 72, 82, 31, 66, 56, 19, 44, 24];
     min_heap_sort(&mut nums);
+    assert_eq!(vec![19, 24, 31, 44, 56, 66, 72, 82, 84, 93], nums);
+  }
+  #[test]
+  fn test_bucket_sort() {
+    let mut nums = vec![5, 2, 9, 1, 5, 6];
+    bucket_sort(&mut nums);
+    assert_eq!(vec![1, 2, 5, 5, 6, 9], nums);
+    let mut nums = vec![1, 3, 2, 8, 6, 4, 9, 7, 5, 10];
+    bucket_sort(&mut nums);
+    assert_eq!(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10], nums);
+    let mut nums = vec![93, 84, 72, 82, 31, 66, 56, 19, 44, 24];
+    bucket_sort(&mut nums);
     assert_eq!(vec![19, 24, 31, 44, 56, 66, 72, 82, 84, 93], nums);
   }
   #[test]
