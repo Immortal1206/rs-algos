@@ -146,102 +146,6 @@ impl<T: Ord> MaxHeap<T> {
   // 计算父节点下标
   pub fn parent(i: usize) -> usize {
     if i > 0 {
-      (i - 1) >> 2
-    } else {
-      0
-    }
-  }
-
-  // 计算左子节点下标
-  pub fn left(i: usize) -> usize {
-    i * 2 + 1
-  }
-
-  // 计算右子节点下标
-  pub fn right(i: usize) -> usize {
-    i * 2 + 2
-  }
-
-  /// 对节点i进行下沉操作
-  pub fn max_heapify(&mut self, i: usize) {
-    let (left, right, mut largest) = (MaxHeap::<T>::left(i), MaxHeap::<T>::right(i), i);
-    // 左子节点大于当前节点，交换
-    if left < self.len() && self.elems[left] > self.elems[largest] {
-      largest = left;
-    }
-    // 右子节点大于当前节点，交换
-    if right < self.len() && self.elems[right] > self.elems[largest] {
-      largest = right;
-    }
-    // 若发生交换，继续下沉节点，保证满足大顶堆的定义
-    if largest != i {
-      self.elems.swap(largest, i);
-      self.max_heapify(largest);
-    }
-  }
-
-  // 插入一个元素
-  pub fn push(&mut self, v: T) {
-    self.elems.push(v);
-    // 上升元素
-    let mut i = self.len() - 1;
-    while i > 0 && self.elems[MaxHeap::<T>::parent(i)] < self.elems[i] {
-      self.elems.swap(i, MaxHeap::<T>::parent(i));
-      i = MaxHeap::<T>::parent(i);
-    }
-  }
-
-  // 弹出最大元素
-  pub fn pop(&mut self) -> Option<T> {
-    if self.is_empty() {
-      None
-    } else {
-      let b = self.elems.len() - 1;
-      self.elems.swap(0, b);
-      let v = self.elems.pop();
-      if !self.is_empty() {
-        // 下沉根节点
-        self.max_heapify(0);
-      }
-      v
-    }
-  }
-
-  pub fn is_empty(&self) -> bool {
-    self.elems.is_empty()
-  }
-
-  pub fn len(&self) -> usize {
-    self.elems.len()
-  }
-}
-
-impl<T: Ord> From<Vec<T>> for MaxHeap<T> {
-  fn from(value: Vec<T>) -> Self {
-    let mut heap = MaxHeap { elems: value };
-    // 自底向上遍历非叶节点
-    for i in (0..heap.len() / 2).rev() {
-      // 下沉节点i
-      heap.max_heapify(i)
-    }
-    heap
-  }
-}
-
-pub struct MinHeap<T: Ord> {
-  pub elems: VecDeque<T>,
-}
-
-impl<T: Ord> MinHeap<T> {
-  pub fn new() -> MinHeap<T> {
-    MinHeap {
-      elems: VecDeque::new(),
-    }
-  }
-
-  // 计算父节点下标
-  pub fn parent(i: usize) -> usize {
-    if i > 0 {
       (i - 1) >> 1
     } else {
       0
@@ -259,7 +163,121 @@ impl<T: Ord> MinHeap<T> {
   }
 
   /// 对节点i进行下沉操作
-  pub fn sift_down(&mut self, i: usize) {
+  fn sift_down(&mut self, i: usize) {
+    let (left, right, mut largest) = (MaxHeap::<T>::left(i), MaxHeap::<T>::right(i), i);
+    // 左子节点大于当前节点，交换
+    if left < self.len() && self.elems[left] > self.elems[largest] {
+      largest = left;
+    }
+    // 右子节点大于当前节点，交换
+    if right < self.len() && self.elems[right] > self.elems[largest] {
+      largest = right;
+    }
+    // 若发生交换，继续下沉节点，保证满足大顶堆的定义
+    if largest != i {
+      self.elems.swap(largest, i);
+      self.sift_down(largest);
+    }
+  }
+
+  /// 对节点i进行上浮操作
+  fn sift_up(&mut self, i: usize) {
+    if i == 0 {
+      return;
+    }
+    let parent = MinHeap::<T>::parent(i);
+    // 父节点小于当前节点，交换
+    if self.elems[parent] < self.elems[i] {
+      self.elems.swap(i, parent);
+      self.sift_up(parent);
+    }
+  }
+
+  // 插入一个元素
+  pub fn push(&mut self, v: T) {
+    self.elems.push(v);
+    // 上升元素
+    let last_index = self.len() - 1;
+    self.sift_up(last_index);
+  }
+
+  // 弹出最大元素
+  pub fn pop(&mut self) -> Option<T> {
+    if self.is_empty() {
+      None
+    } else {
+      let b = self.len() - 1;
+      self.elems.swap(0, b);
+      let v = self.elems.pop();
+      if !self.is_empty() {
+        // 下沉根节点
+        self.sift_down(0);
+      }
+      v
+    }
+  }
+
+  pub fn is_empty(&self) -> bool {
+    self.elems.is_empty()
+  }
+
+  pub fn len(&self) -> usize {
+    self.elems.len()
+  }
+}
+
+impl<T: Ord> From<Vec<T>> for MaxHeap<T> {
+  /**
+  在将一个数组转换为最大堆时，从数组的中间位置开始逐步向前进行下移操作
+
+  从数组的中间位置开始是因为，
+  - 最后一个非叶子节点在完全二叉树中的索引位置大致位于数组长度的一半减一处。
+  - 最后一个非叶子节点的下层节点都是叶子节点，所以对这些节点进行下移操作不会影响堆的性质。
+
+  因此，我们可以从最后一个非叶子节点开始，往根节点的方向逐步进行下移操作
+   */
+  fn from(value: Vec<T>) -> Self {
+    let mut heap = MaxHeap { elems: value };
+    for i in (0..heap.len() / 2).rev() {
+      // 下沉节点i
+      heap.sift_down(i)
+    }
+    heap
+  }
+}
+
+pub struct MinHeap<T: Ord> {
+  pub elems: VecDeque<T>,
+}
+
+impl<T: Ord> MinHeap<T> {
+  pub fn new() -> MinHeap<T> {
+    MinHeap {
+      elems: VecDeque::new(),
+    }
+  }
+
+  // 计算父节点下标
+  fn parent(i: usize) -> usize {
+    if i > 0 {
+      (i - 1) >> 1
+    } else {
+      0
+    }
+  }
+
+  // 计算左子节点下标
+  fn left(i: usize) -> usize {
+    i * 2 + 1
+  }
+
+  // 计算右子节点下标
+  fn right(i: usize) -> usize {
+    i * 2 + 2
+  }
+
+  /// 对节点i进行下沉操作
+  fn sift_down(&mut self, i: usize) {
     let (left, right, mut smallest) = (MinHeap::<T>::left(i), MinHeap::<T>::right(i), i);
     // 左子节点小于当前节点，交换
     if left < self.len() && self.elems[left] < self.elems[smallest] {
@@ -276,7 +294,7 @@ impl<T: Ord> MinHeap<T> {
     }
   }
   /// 对节点i进行上浮操作
-  pub fn sift_up(&mut self, i: usize) {
+  fn sift_up(&mut self, i: usize) {
     if i == 0 {
       return;
     }
@@ -323,7 +341,7 @@ impl<T: Ord> MinHeap<T> {
 
 impl<T: Ord> From<VecDeque<T>> for MinHeap<T> {
   /**
-  在将一个数组转换为最小堆时，从数组的中间位置开始逐步进行下移操作
+  在将一个数组转换为最小堆时，从数组的中间位置开始逐步向前进行下移操作
 
   从数组的中间位置开始是因为，
   - 最后一个非叶子节点在完全二叉树中的索引位置大致位于数组长度的一半减一处。
@@ -359,8 +377,7 @@ impl<T: Ord> From<Vec<T>> for MinHeap<T> {
 
 /**
   堆排序的基本思想是：将待排序序列构造成一个小顶堆，此时，整个序列的最小值就是堆顶根节点。<br>
-  将其与末尾元素进行交换，此时末尾就为最小值。这个最小值不再计算到堆内，<br>
-  那么再将剩余的 n - 1 个元素重新构造成一个堆，这样会得到一个新的最小值。<br>
+  弹出根节点，再将剩余的 n - 1 个元素重新构造成一个堆，这样会得到一个新的最小值。<br>
 */
 pub fn max_heap_sort(nums: &mut Vec<usize>) {
   let mut heap = MaxHeap::from(nums.clone());
@@ -382,7 +399,10 @@ mod tests {
   fn test_insertion_sort() {
     let mut nums = vec![5, 2, 9, 1, 5, 6];
     insertion_sort(&mut nums);
-    assert_eq!(vec![1, 2, 5, 5, 6, 9], nums)
+    assert_eq!(vec![1, 2, 5, 5, 6, 9], nums);
+    let mut nums = vec![93, 84, 72, 82, 31, 66, 56, 19, 44, 24];
+    insertion_sort(&mut nums);
+    assert_eq!(vec![19, 24, 31, 44, 56, 66, 72, 82, 84, 93], nums);
   }
   #[test]
   fn test_binary_insertion_sort() {
@@ -392,6 +412,9 @@ mod tests {
     let mut nums = vec![1, 3, 2, 8, 6, 4, 9, 7, 5, 10];
     binary_insertion_sort(&mut nums);
     assert_eq!(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10], nums);
+    let mut nums = vec![93, 84, 72, 82, 31, 66, 56, 19, 44, 24];
+    binary_insertion_sort(&mut nums);
+    assert_eq!(vec![19, 24, 31, 44, 56, 66, 72, 82, 84, 93], nums);
   }
   #[test]
   fn test_quick_sort() {
@@ -401,6 +424,9 @@ mod tests {
     let mut nums = vec![1, 3, 2, 8, 6, 4, 9, 7, 5, 10];
     quick_sort(&mut nums);
     assert_eq!(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10], nums);
+    let mut nums = vec![93, 84, 72, 82, 31, 66, 56, 19, 44, 24];
+    quick_sort(&mut nums);
+    assert_eq!(vec![19, 24, 31, 44, 56, 66, 72, 82, 84, 93], nums);
   }
   #[test]
   fn test_shell_sort() {
@@ -410,6 +436,9 @@ mod tests {
     let mut nums = vec![1, 3, 2, 8, 6, 4, 9, 7, 5, 10];
     shell_sort(&mut nums);
     assert_eq!(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10], nums);
+    let mut nums = vec![93, 84, 72, 82, 31, 66, 56, 19, 44, 24];
+    shell_sort(&mut nums);
+    assert_eq!(vec![19, 24, 31, 44, 56, 66, 72, 82, 84, 93], nums);
   }
   #[test]
   fn test_merge_sort() {
@@ -419,6 +448,9 @@ mod tests {
     let mut nums = vec![1, 3, 2, 8, 6, 4, 9, 7, 5, 10];
     merge_sort(&mut nums);
     assert_eq!(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10], nums);
+    let mut nums = vec![93, 84, 72, 82, 31, 66, 56, 19, 44, 24];
+    merge_sort(&mut nums);
+    assert_eq!(vec![19, 24, 31, 44, 56, 66, 72, 82, 84, 93], nums);
   }
   #[test]
   fn test_max_heap_sort() {
@@ -428,6 +460,9 @@ mod tests {
     let mut nums = vec![1, 3, 2, 8, 6, 4, 9, 7, 5, 10];
     max_heap_sort(&mut nums);
     assert_eq!(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10], nums);
+    let mut nums = vec![93, 84, 72, 82, 31, 66, 56, 19, 44, 24];
+    max_heap_sort(&mut nums);
+    assert_eq!(vec![19, 24, 31, 44, 56, 66, 72, 82, 84, 93], nums);
   }
   #[test]
   fn test_min_heap_sort() {
@@ -437,6 +472,9 @@ mod tests {
     let mut nums = vec![1, 3, 2, 8, 6, 4, 9, 7, 5, 10];
     min_heap_sort(&mut nums);
     assert_eq!(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10], nums);
+    let mut nums = vec![93, 84, 72, 82, 31, 66, 56, 19, 44, 24];
+    min_heap_sort(&mut nums);
+    assert_eq!(vec![19, 24, 31, 44, 56, 66, 72, 82, 84, 93], nums);
   }
   #[test]
   fn test_min_heap() {
@@ -458,6 +496,24 @@ mod tests {
     assert_eq!(
       MinHeap::from(reversed).elems,
       VecDeque::from(vec![19, 24, 31, 56, 66, 84, 44, 72, 82, 93])
+    );
+  }
+  #[test]
+  fn test_max_heap() {
+    let vec_nums = vec![93, 19, 72, 31, 84, 66, 56, 44, 82, 24];
+    let mut max_heap = MaxHeap::new();
+    for num in vec_nums.clone() {
+      max_heap.push(num)
+    }
+    assert_eq!(vec![93, 84, 72, 82, 31, 66, 56, 19, 44, 24], max_heap.elems);
+    let reversed: Vec<i32> = vec_nums.clone().into_iter().rev().collect();
+    assert_eq!(
+      MaxHeap::from(vec_nums).elems,
+      vec![93, 84, 72, 82, 24, 66, 56, 44, 31, 19]
+    );
+    assert_eq!(
+      MaxHeap::from(reversed).elems,
+      vec![93, 82, 84, 72, 66, 44, 31, 56, 19, 24]
     );
   }
 }
