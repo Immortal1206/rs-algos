@@ -495,6 +495,78 @@ pub fn counting_sort(nums: &mut [usize]) {
   }
 }
 
+/**
+#### 基数排序
+1. 找到nums中最大值，得到位数，将数据统一为相同位数，不够补零。
+2. 从最低位开始，依次进行稳定排序，收集，再排序高位，直到排序完成。
+
+---
+
+#### 为什么同一数位的排序要用稳定排序？
+  因为稳定排序能将上一次排序的成果保留下来。<br>
+  例如十位数的排序过程能保留个位数的排序成果，百位数的排序过程能保留十位数的排序成果。
+ */
+pub fn radix_sort(nums: &mut [usize]) {
+  if nums.len() < 2 {
+    return;
+  }
+
+  // 找到最大的数，它的位最多
+  let max_num = match nums.iter().max() {
+    Some(&x) => x,
+    None => return,
+  };
+
+  // 找最接近且 >= nums 长度的 2 的次幂值作为桶大小，如:
+  // 最接近且 >= 10 的 2 的次幂值是 2^4 = 16
+  // 最接近且 >= 17 的 2 的次幂值是 2^5 = 32
+  // radix进制，将数转为radix进制
+  let radix = nums.len().next_power_of_two();
+
+  // digit 代表小于某个位对应桶的所有数
+  // 个、十、百、千分别在 1、2、3、4 位
+  // 起始从个位开始，所以是 1
+  let mut digit = 1;
+  while digit <= max_num {
+    // 闭包函数：计算数据在桶中的位置
+    let index_of = |x| x / digit % radix;
+
+    // 计数器
+    // 如十进制的位范围为 0~9 ，因此需要长度为 10 的桶
+    let mut counter = vec![0; radix];
+    // 计数，统计每个数字在当前位上的出现次数
+    for &x in nums.iter() {
+      counter[index_of(x)] += 1;
+    }
+    // 累加，使得 counter[i] 存储的是小于等于 i 的元素在原数组中的总数量。
+    // 求前缀和，将“出现个数”转换为“数组索引”
+    // 考虑一个简单的例子，假设数组中有如下元素：[3, 1, 4, 1, 5]。
+    // 我们要按个位数进行排序，首先统计每个数字出现的次数，得到计数数组 counter 为 [0, 2, 0, 1, 1, 1]。然后进行累加操作：
+    // counter[1] += counter[0]，表示小于等于 1 的元素的总数量为 2。
+    // counter[2] += counter[1]，表示小于等于 2 的元素的总数量为 2。
+    // counter[3] += counter[2]，表示小于等于 3 的元素的总数量为 3。
+    // counter[4] += counter[3]，表示小于等于 4 的元素的总数量为 4。
+    // counter[5] += counter[4]，表示小于等于 5 的元素的总数量为 5。
+    // 累加操作后的计数数组 counter 变为 [0, 2, 2, 3, 4, 5]。
+    // 这样，我们就可以根据这个累加后的计数数组，确定每个元素在排序后数组中的位置。
+    // 如元素5在原数组的索引为count[5] - 1 = 5 - 1 = 4，注意，排序该元素之后，count[5] = 4
+    // 元素1在原数组的索引为count[1] - 1 = 2 - 1 = 1， 第二个元素1在原数组的索引为1 - 1 = 0
+    // 因此，最后进行排序时，需要对原数组逆序进行
+    for i in 1..radix {
+      counter[i] += counter[i - 1];
+    }
+
+    // 排序
+    for &x in nums.to_owned().iter().rev() {
+      counter[index_of(x)] -= 1;
+      nums[counter[index_of(x)]] = x;
+    }
+
+    // 跨越桶
+    digit *= radix;
+  }
+}
+
 #[cfg(test)]
 mod tests {
   use super::*;
@@ -601,6 +673,18 @@ mod tests {
     assert_eq!(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10], nums);
     let mut nums = vec![93, 84, 72, 82, 31, 66, 56, 19, 44, 24];
     counting_sort(&mut nums);
+    assert_eq!(vec![19, 24, 31, 44, 56, 66, 72, 82, 84, 93], nums);
+  }
+  #[test]
+  fn test_radix_sort() {
+    let mut nums = vec![5, 2, 9, 1, 5, 6];
+    radix_sort(&mut nums);
+    assert_eq!(vec![1, 2, 5, 5, 6, 9], nums);
+    let mut nums = vec![1, 3, 2, 8, 6, 4, 9, 7, 5, 10];
+    radix_sort(&mut nums);
+    assert_eq!(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10], nums);
+    let mut nums = vec![93, 84, 72, 82, 31, 66, 56, 19, 44, 24];
+    radix_sort(&mut nums);
     assert_eq!(vec![19, 24, 31, 44, 56, 66, 72, 82, 84, 93], nums);
   }
   #[test]
