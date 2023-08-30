@@ -1,5 +1,6 @@
 pub mod add_two_numbers;
 pub mod dynamic_programing;
+pub mod length_of_longest_substring;
 pub mod list;
 pub mod queue;
 pub mod search;

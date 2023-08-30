@@ -523,7 +523,7 @@ pub fn radix_sort(nums: &mut [usize]) {
   // radix进制，将数转为radix进制
   let radix = nums.len().next_power_of_two();
 
-  // digit 代表小于某个位对应桶的所有数
+  // digit 代表radix进制下个、十、百、千位累计的数值
   // 个、十、百、千分别在 1、2、3、4 位
   // 起始从个位开始，所以是 1
   let mut digit = 1;
@@ -562,7 +562,6 @@ pub fn radix_sort(nums: &mut [usize]) {
       nums[counter[index_of(x)]] = x;
     }
 
-    // 跨越桶
     digit *= radix;
   }
 }
