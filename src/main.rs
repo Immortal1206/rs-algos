@@ -3,6 +3,7 @@ pub mod dynamic_programing;
 pub mod is_palindrome;
 pub mod length_of_longest_substring;
 pub mod list;
+pub mod longest_common_prefix;
 pub mod queue;
 pub mod roman_to_int;
 pub mod search;
