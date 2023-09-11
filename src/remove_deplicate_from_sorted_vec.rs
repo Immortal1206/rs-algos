@@ -17,10 +17,10 @@ pub fn remove_duplicates_v2(nums: &mut Vec<i32>) -> i32 {
 /// note that if the first element is i32::MIN,this solution is wrong
 pub fn remove_duplicates_v3(nums: &mut Vec<i32>) -> i32 {
   let mut previous: i32 = i32::MIN;
-  nums.retain(|n| match *n == previous {
+  nums.retain(|&n| match n == previous {
     true => false,
     false => {
-      previous = *n;
+      previous = n;
       true
     }
   });
