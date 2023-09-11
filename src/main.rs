@@ -1,6 +1,7 @@
 pub mod add_two_numbers;
 pub mod contains_duplicate;
 pub mod dynamic_programing;
+pub mod index_of_first_occurence_in_string;
 pub mod is_palindrome;
 pub mod is_valid_parentheses;
 pub mod length_of_longest_substring;
