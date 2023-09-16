@@ -4,6 +4,7 @@ pub mod dynamic_programing;
 pub mod index_of_first_occurence_in_string;
 pub mod is_palindrome;
 pub mod is_valid_parentheses;
+pub mod kmp;
 pub mod length_of_longest_substring;
 pub mod list;
 pub mod longest_common_prefix;
