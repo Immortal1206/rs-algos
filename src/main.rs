@@ -11,6 +11,7 @@ pub mod longest_common_prefix;
 pub mod max_profit;
 pub mod merge_two_sorted_lists;
 pub mod merge_two_sorted_vec;
+pub mod polynomial_evaluation;
 pub mod queue;
 pub mod remove_deplicate_from_sorted_vec;
 pub mod remove_element_in_vec;

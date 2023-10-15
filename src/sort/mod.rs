@@ -87,8 +87,8 @@ pub fn merge_sort(nums: &mut [i32]) {
 }
 
 fn merge(nums: &mut [i32], mid: usize) {
-  let mut i = 0; // 标记前半部分数据
-  let mut k = mid; // 标记后半部分数据
+  let mut i = 0; // 前半部分当前的索引
+  let mut k = mid; // 后半部分当前的索引
   let mut temp = Vec::new();
 
   // 合并分开的两个数组
