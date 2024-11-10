@@ -1,14 +1,15 @@
 use std::collections::HashMap;
 
 pub fn roman_to_int(s: String) -> i32 {
-  let mut character: HashMap<char, i32> = HashMap::new();
-  character.insert('I', 1);
-  character.insert('V', 5);
-  character.insert('X', 10);
-  character.insert('L', 50);
-  character.insert('C', 100);
-  character.insert('D', 500);
-  character.insert('M', 1000);
+  let character: HashMap<char, i32> = HashMap::from([
+    ('I', 1),
+    ('V', 5),
+    ('X', 10),
+    ('L', 50),
+    ('C', 100),
+    ('D', 500),
+    ('M', 1000),
+  ]);
   let mut prev = 'I';
   let mut res = 0i32;
   for char in s.chars().rev() {
@@ -24,6 +25,30 @@ pub fn roman_to_int(s: String) -> i32 {
   res
 }
 
+pub fn roman_to_int_v1(s: String) -> i32 {
+  let map = HashMap::from([
+    ('I', 1),
+    ('V', 5),
+    ('X', 10),
+    ('L', 50),
+    ('C', 100),
+    ('D', 500),
+    ('M', 1000),
+  ]);
+  s.chars()
+    .zip(s.chars().skip(1).chain(" ".chars()))
+    .map(|(a, b)| {
+      let a_val = map.get(&a).unwrap_or(&0);
+      let b_val = map.get(&b).unwrap_or(&0);
+      if a_val >= b_val {
+        *a_val
+      } else {
+        -*a_val
+      }
+    })
+    .sum()
+}
+
 #[cfg(test)]
 mod tests {
   use super::*;
@@ -35,5 +60,11 @@ mod tests {
     assert_eq!(58, roman_to_int(s.into()));
     let s = "MCMXCIV";
     assert_eq!(1994, roman_to_int(s.into()));
+    let s = "III";
+    assert_eq!(3, roman_to_int_v1(s.into()));
+    let s = "LVIII";
+    assert_eq!(58, roman_to_int_v1(s.into()));
+    let s = "MCMXCIV";
+    assert_eq!(1994, roman_to_int_v1(s.into()));
   }
 }
